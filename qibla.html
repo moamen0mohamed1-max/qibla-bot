@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>اتجاه القبلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0B1D26;
+    --surface:#15303A;
+    --surface-2:#1D3B45;
+    --gold:#C9A24B;
+    --gold-soft:#E2C77E;
+    --parchment:#F4ECD8;
+    --sage:#5A8F7B;
+    --danger:#B5654A;
+    --line: rgba(244,236,216,0.12);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background: radial-gradient(120% 90% at 50% -10%, #11313c 0%, var(--bg-deep) 55%, #081318 100%);
+    color:var(--parchment);
+    font-family:'Tajawal', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+  }
+
+  /* خلفية نجمية خفيفة جداً */
+  .stars{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(244,236,216,0.35) 0, transparent 50%),
+      radial-gradient(1px 1px at 80% 15%, rgba(244,236,216,0.25) 0, transparent 50%),
+      radial-gradient(1.5px 1.5px at 60% 70%, rgba(244,236,216,0.3) 0, transparent 50%),
+      radial-gradient(1px 1px at 30% 80%, rgba(244,236,216,0.2) 0, transparent 50%),
+      radial-gradient(1px 1px at 90% 60%, rgba(244,236,216,0.25) 0, transparent 50%),
+      radial-gradient(1.5px 1.5px at 45% 35%, rgba(244,236,216,0.3) 0, transparent 50%);
+    background-size: 100% 100%;
+    opacity:.8;
+  }
+
+  header{
+    position:relative; z-index:1;
+    width:100%; max-width:480px;
+    text-align:center;
+    padding-top:6px;
+    margin-bottom: 6px;
+  }
+
+  .brand-eyebrow{
+    font-family:'Amiri', serif;
+    font-size:13px;
+    letter-spacing:.12em;
+    color: var(--gold-soft);
+    opacity:.85;
+    margin-bottom:2px;
+  }
+
+  .brand-name{
+    font-family:'Amiri', serif;
+    font-weight:700;
+    font-size:26px;
+    color: var(--parchment);
+    margin:0;
+    line-height:1.3;
+  }
+
+  .brand-name .accent{ color: var(--gold-soft); }
+
+  .subtitle{
+    font-size:13px;
+    color: rgba(244,236,216,0.55);
+    margin-top:6px;
+    font-weight:400;
+  }
+
+  main{
+    position:relative; z-index:1;
+    width:100%; max-width:420px;
+    display:flex; flex-direction:column; align-items:center;
+    flex:1;
+    justify-content:center;
+    gap:22px;
+  }
+
+  /* --- شاشة الإذن (قبل تفعيل الحساس) --- */
+  #gate{
+    width:100%;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:28px 22px;
+    text-align:center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+
+  #gate .mihrab-icon{
+    width:54px; height:54px; margin:0 auto 14px;
+    opacity:.9;
+  }
+
+  #gate h2{
+    font-family:'Amiri', serif;
+    font-size:19px;
+    margin:0 0 10px;
+    color: var(--gold-soft);
+  }
+
+  #gate p{
+    font-size:14px;
+    line-height:1.8;
+    color: rgba(244,236,216,0.75);
+    margin:0 0 20px;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%;
+    padding:14px 18px;
+    border-radius:14px;
+    border:none;
+    background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+    color:#1A1106;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 0 8px 20px rgba(201,162,75,0.25);
+  }
+  .btn:active{ transform: scale(0.97); }
+
+  .btn.secondary{
+    background: transparent;
+    border:1px solid var(--line);
+    color: var(--parchment);
+    box-shadow:none;
+    margin-top:10px;
+  }
+
+  #status-line{
+    font-size:12.5px;
+    color: rgba(244,236,216,0.5);
+    margin-top:14px;
+    min-height:16px;
+  }
+
+  #status-line.error{ color: var(--danger); }
+  #status-line.ok{ color: var(--sage); }
+
+  /* --- البوصلة --- */
+  #compass-wrap{
+    display:none;
+    width:100%;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+
+  .compass-dial{
+    position:relative;
+    width: min(78vw, 300px);
+    height: min(78vw, 300px);
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(244,236,216,0.05), transparent 60%),
+      linear-gradient(180deg, var(--surface), #0F242C);
+    border:1px solid var(--line);
+    box-shadow:
+      0 0 0 1px rgba(201,162,75,0.08),
+      0 25px 60px rgba(0,0,0,0.45),
+      inset 0 0 40px rgba(0,0,0,0.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .dial-ticks{
+    position:absolute; inset:0;
+  }
+
+  .tick{
+    position:absolute;
+    top:6px; left:50%;
+    width:1.5px; height:10px;
+    background: rgba(244,236,216,0.25);
+    transform-origin: 50% 150px;
+  }
+  .tick.major{ height:16px; width:2px; background: rgba(244,236,216,0.45); }
+
+  .dir-label{
+    position:absolute;
+    font-size:13px;
+    font-weight:700;
+    color: rgba(244,236,216,0.55);
+  }
+  .dir-label.N{ top:14px; left:50%; transform:translateX(-50%); color: var(--gold-soft); }
+  .dir-label.E{ top:50%; right:16px; transform:translateY(-50%); }
+  .dir-label.S{ bottom:14px; left:50%; transform:translateX(-50%); }
+  .dir-label.W{ top:50%; left:16px; transform:translateY(-50%); }
+
+  /* المؤشر على شكل عقد المحراب */
+  #needle{
+    position:relative;
+    width: 56px; height: 56px;
+    transform: rotate(0deg);
+    transition: transform .25s cubic-bezier(.22,.61,.36,1);
+    filter: drop-shadow(0 6px 14px rgba(201,162,75,0.35));
+  }
+
+  #needle svg{ width:100%; height:100%; display:block; }
+
+  .center-dot{
+    position:absolute; width:8px; height:8px; border-radius:50%;
+    background: var(--parchment);
+    box-shadow:0 0 0 3px rgba(244,236,216,0.15);
+  }
+
+  #readout{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .stat{
+    flex:1;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 10px;
+    text-align:center;
+  }
+
+  .stat .label{
+    font-size:11.5px;
+    color: rgba(244,236,216,0.5);
+    margin-bottom:4px;
+  }
+
+  .stat .value{
+    font-family:'Tajawal', sans-serif;
+    font-weight:900;
+    font-size:18px;
+    color: var(--gold-soft);
+    direction:ltr;
+    display:inline-block;
+  }
+
+  .stat .value small{
+    font-size:12px;
+    font-weight:500;
+    color: rgba(244,236,216,0.55);
+  }
+
+  #aligned-banner{
+    display:none;
+    width:100%;
+    text-align:center;
+    background: linear-gradient(180deg, rgba(90,143,123,0.18), rgba(90,143,123,0.06));
+    border:1px solid rgba(90,143,123,0.4);
+    color: var(--sage);
+    border-radius:14px;
+    padding:10px 12px;
+    font-weight:700;
+    font-size:14px;
+  }
+
+  footer{
+    position:relative; z-index:1;
+    margin-top:18px;
+    text-align:center;
+    font-size:11.5px;
+    color: rgba(244,236,216,0.35);
+    line-height:1.7;
+  }
+
+  footer .bot-tag{ color: rgba(226,199,126,0.55); }
+
+  @media (prefers-reduced-motion: reduce){
+    #needle{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars"></div>
+
+<header>
+  <div class="brand-eyebrow">من إعداد بوت</div>
+  <h1 class="brand-name"><span class="accent">[اسم البوت]</span></h1>
+  <div class="subtitle">اتجاه القبلة بالبوصلة</div>
+</header>
+
+<main>
+
+  <div id="gate">
+    <svg class="mihrab-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 56V30C14 18.9543 22.9543 10 34 10C45.0457 10 54 18.9543 54 30V56" stroke="#C9A24B" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M14 56H54" stroke="#C9A24B" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M22 56V34C22 27.3726 27.3726 22 34 22C40.6274 22 46 27.3726 46 34V56" stroke="#E2C77E" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <h2>وجّه جهازك نحو الكعبة المشرفة</h2>
+    <p>
+      هذه الصفحة تستخدم بوصلة جهازك وموقعك الجغرافي فقط لحساب اتجاه القبلة، ولا تُخزَّن أو تُرسَل أي بيانات لأي مكان.
+    </p>
+    <button class="btn" id="start-btn">تفعيل البوصلة</button>
+    <div id="status-line"></div>
+  </div>
+
+  <div id="compass-wrap">
+    <div class="compass-dial" id="dial">
+      <div class="dial-ticks" id="ticks"></div>
+      <span class="dir-label N">ش</span>
+      <span class="dir-label E">ق</span>
+      <span class="dir-label S">ج</span>
+      <span class="dir-label W">غ</span>
+
+      <div id="needle">
+        <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+          <path d="M28 4L36 30H20L28 4Z" fill="#C9A24B"/>
+          <path d="M16 38C16 32.4772 21.3726 28 28 28C34.6274 28 40 32.4772 40 38V52H16V38Z" fill="#E2C77E"/>
+          <path d="M16 38C16 32.4772 21.3726 28 28 28C34.6274 28 40 32.4772 40 38" stroke="#1A1106" stroke-opacity="0.15" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="center-dot"></div>
+    </div>
+
+    <div id="aligned-banner">📍 أنت متجه الآن نحو القبلة</div>
+
+    <div id="readout">
+      <div class="stat">
+        <div class="label">اتجاه القبلة</div>
+        <div class="value" id="qibla-deg">--<small>°</small></div>
+      </div>
+      <div class="stat">
+        <div class="label">المسافة لمكة</div>
+        <div class="value" id="distance">--<small> كم</small></div>
+      </div>
+    </div>
+
+    <button class="btn secondary" id="recalibrate-btn">إعادة الضبط</button>
+  </div>
+
+</main>
+
+<footer>
+  وُجّهت هذه البوصلة بحساب فلكي تقريبي لاتجاه القبلة، يُنصح بمراجعة مسجد محلي لضبط أدق.<br>
+  <span class="bot-tag">[اسم البوت] — جزء من محراب التلاوات</span>
+</footer>
+
+<script>
+(function(){
+  const KAABA_LAT = 21.4225;
+  const KAABA_LNG = 39.8262;
+
+  const gate = document.getElementById('gate');
+  const compassWrap = document.getElementById('compass-wrap');
+  const startBtn = document.getElementById('start-btn');
+  const recalBtn = document.getElementById('recalibrate-btn');
+  const statusLine = document.getElementById('status-line');
+  const needle = document.getElementById('needle');
+  const dial = document.getElementById('dial');
+  const qiblaDegEl = document.getElementById('qibla-deg');
+  const distanceEl = document.getElementById('distance');
+  const alignedBanner = document.getElementById('aligned-banner');
+  const ticksContainer = document.getElementById('ticks');
+
+  let qiblaBearing = null;
+  let lastHeading = 0;
+
+  // بناء علامات البوصلة (36 علامة كل 10 درجات)
+  for (let i = 0; i < 36; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'tick' + (i % 9 === 0 ? ' major' : '');
+    tick.style.transform = `rotate(${i * 10}deg)`;
+    ticksContainer.appendChild(tick);
+  }
+
+  function toRad(d){ return d * Math.PI / 180; }
+  function toDeg(r){ return r * 180 / Math.PI; }
+
+  function computeQibla(lat, lng){
+    const phiK = toRad(KAABA_LAT);
+    const lambdaK = toRad(KAABA_LNG);
+    const phi = toRad(lat);
+    const lambda = toRad(lng);
+    const psi = Math.atan2(
+      Math.sin(lambdaK - lambda),
+      Math.cos(phi) * Math.tan(phiK) - Math.sin(phi) * Math.cos(lambdaK - lambda)
+    );
+    let bearing = toDeg(psi);
+    bearing = (bearing + 360) % 360;
+    return bearing;
+  }
+
+  function computeDistance(lat, lng){
+    const R = 6371;
+    const dLat = toRad(KAABA_LAT - lat);
+    const dLng = toRad(KAABA_LNG - lng);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat)) * Math.cos(toRad(KAABA_LAT)) * Math.sin(dLng/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round(R * c);
+  }
+
+  function setStatus(msg, type){
+    statusLine.textContent = msg;
+    statusLine.className = type ? type : '';
+  }
+
+  function updateNeedle(deviceHeading){
+    if (qiblaBearing === null) return;
+    lastHeading = deviceHeading;
+    const rotation = qiblaBearing - deviceHeading;
+    needle.style.transform = `rotate(${rotation}deg)`;
+    dial.style.transform = `rotate(${-deviceHeading}deg)`;
+
+    const diff = Math.abs(((rotation % 360) + 540) % 360 - 180);
+    if (diff < 6) {
+      alignedBanner.style.display = 'block';
+    } else {
+      alignedBanner.style.display = 'none';
+    }
+  }
+
+  function handleOrientation(e){
+    let heading;
+    if (e.webkitCompassHeading !== undefined) {
+      heading = e.webkitCompassHeading;
+    } else if (e.alpha !== null) {
+      heading = 360 - e.alpha;
+    } else {
+      return;
+    }
+    updateNeedle(heading);
+  }
+
+  function startCompass(){
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation, true);
+        } else {
+          setStatus('تم رفض إذن البوصلة، فعّله من إعدادات المتصفح.', 'error');
+        }
+      }).catch(() => {
+        setStatus('تعذّر الوصول لحساس البوصلة في هذا المتصفح.', 'error');
+      });
+    } else if ('ondeviceorientationabsolute' in window) {
+      window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    } else if ('ondeviceorientation' in window) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+    } else {
+      setStatus('جهازك لا يدعم حساس البوصلة، جرّب من موبايل بمتصفح يدعم ذلك.', 'error');
+    }
+  }
+
+  function init(){
+    setStatus('جاري تحديد موقعك...');
+    if (!navigator.geolocation) {
+      setStatus('المتصفح لا يدعم تحديد الموقع.', 'error');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        qiblaBearing = computeQibla(latitude, longitude);
+        const dist = computeDistance(latitude, longitude);
+        qiblaDegEl.innerHTML = Math.round(qiblaBearing) + '<small>°</small>';
+        distanceEl.innerHTML = dist.toLocaleString('en-US') + '<small> كم</small>';
+
+        gate.style.display = 'none';
+        compassWrap.style.display = 'flex';
+        setStatus('');
+        startCompass();
+      },
+      (err) => {
+        setStatus('تعذّر تحديد موقعك، فعّل خدمة الموقع وأعد المحاولة.', 'error');
+      },
+      { enableHighAccuracy: true, timeout: 12000 }
+    );
+  }
+
+  startBtn.addEventListener('click', init);
+  recalBtn.addEventListener('click', () => {
+    compassWrap.style.display = 'none';
+    gate.style.display = 'block';
+    setStatus('');
+  });
+})();
+</script>
+
+</body>
+</html>
