@@ -199,6 +199,11 @@
   }
   .tick.major{ height:16px; width:2px; background: rgba(244,236,216,0.45); }
 
+  .north-ring{
+    position:absolute; inset:0;
+    transition: transform .2s ease-out;
+  }
+
   .dir-label{
     position:absolute;
     font-size:13px;
@@ -322,10 +327,9 @@
   <div id="compass-wrap">
     <div class="compass-dial" id="dial">
       <div class="dial-ticks" id="ticks"></div>
-      <span class="dir-label N">ش</span>
-      <span class="dir-label E">ق</span>
-      <span class="dir-label S">ج</span>
-      <span class="dir-label W">غ</span>
+      <div class="north-ring" id="north-ring">
+        <span class="dir-label N" id="label-N">ش</span>
+      </div>
 
       <div id="needle">
         <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
@@ -372,6 +376,7 @@
   const statusLine = document.getElementById('status-line');
   const needle = document.getElementById('needle');
   const dial = document.getElementById('dial');
+  const northLabel = document.getElementById('north-ring');
   const qiblaDegEl = document.getElementById('qibla-deg');
   const distanceEl = document.getElementById('distance');
   const alignedBanner = document.getElementById('aligned-banner');
@@ -424,7 +429,7 @@
     lastHeading = deviceHeading;
     const rotation = qiblaBearing - deviceHeading;
     needle.style.transform = `rotate(${rotation}deg)`;
-    dial.style.transform = `rotate(${-deviceHeading}deg)`;
+    northLabel.style.transform = `rotate(${-deviceHeading}deg)`;
 
     const diff = Math.abs(((rotation % 360) + 540) % 360 - 180);
     if (diff < 6) {
