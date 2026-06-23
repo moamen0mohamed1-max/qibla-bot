@@ -38,7 +38,6 @@
     padding: max(18px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
   }
 
-  /* خلفية نجمية خفيفة جداً */
   .stars{
     position:fixed; inset:0; z-index:0; pointer-events:none;
     background-image:
@@ -96,7 +95,6 @@
     gap:22px;
   }
 
-  /* --- شاشة الإذن (قبل تفعيل الحساس) --- */
   #gate{
     width:100%;
     background: linear-gradient(180deg, var(--surface), var(--surface-2));
@@ -161,7 +159,6 @@
   #status-line.error{ color: var(--danger); }
   #status-line.ok{ color: var(--sage); }
 
-  /* --- البوصلة --- */
   #compass-wrap{
     display:none;
     width:100%;
@@ -195,42 +192,69 @@
     top:6px; left:50%;
     width:1.5px; height:10px;
     background: rgba(244,236,216,0.25);
-    transform-origin: 50% 150px;
+    transform-origin: 50% min(39vw, 150px);
   }
   .tick.major{ height:16px; width:2px; background: rgba(244,236,216,0.45); }
 
-  .north-ring{
-    position:absolute; inset:0;
-    transition: transform .2s ease-out;
+  /* حلقة الاتجاهات الجغرافية الثابتة */
+  .directions-ring {
+    position: absolute;
+    inset: 0;
   }
 
   .dir-label{
     position:absolute;
-    font-size:13px;
+    font-size:14px;
     font-weight:700;
     color: rgba(244,236,216,0.55);
   }
-  .dir-label.N{ top:14px; left:50%; transform:translateX(-50%); color: var(--gold-soft); }
-  .dir-label.E{ top:50%; right:16px; transform:translateY(-50%); }
-  .dir-label.S{ bottom:14px; left:50%; transform:translateX(-50%); }
-  .dir-label.W{ top:50%; left:16px; transform:translateY(-50%); }
+  .dir-label.N{ top:18px; left:50%; transform:translateX(-50%); color: var(--gold-soft); }
+  .dir-label.E{ top:50%; right:18px; transform:translateY(-50%); }
+  .dir-label.S{ bottom:18px; left:50%; transform:translateX(-50%); }
+  .dir-label.W{ top:50%; left:18px; transform:translateY(-50%); }
 
-  /* المؤشر على شكل عقد المحراب */
-  #needle{
-    position:relative;
-    width: 56px; height: 56px;
+  /* الكعبة المشرفة في منتصف الخلفية */
+  .kaaba-center {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    z-index: 1;
+    background: #111;
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .kaaba-center::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 0; right: 0;
+    height: 5px;
+    background: var(--gold);
+  }
+
+  /* مؤشر القبلة الدوار الحر */
+  #needle-wrap {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
     transform: rotate(0deg);
-    transition: transform .25s cubic-bezier(.22,.61,.36,1);
-    filter: drop-shadow(0 6px 14px rgba(201,162,75,0.35));
+    transition: transform .2s cubic-bezier(.1, .3, .3, 1);
+  }
+
+  #needle{
+    position: absolute;
+    top: 12%; left: 50%;
+    width: 34px; height: 45px;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 4px 8px rgba(201,162,75,0.4));
   }
 
   #needle svg{ width:100%; height:100%; display:block; }
-
-  .center-dot{
-    position:absolute; width:8px; height:8px; border-radius:50%;
-    background: var(--parchment);
-    box-shadow:0 0 0 3px rgba(244,236,216,0.15);
-  }
 
   #readout{
     width:100%;
@@ -294,7 +318,7 @@
   footer .bot-tag{ color: rgba(226,199,126,0.55); }
 
   @media (prefers-reduced-motion: reduce){
-    #needle{ transition:none; }
+    #needle-wrap{ transition:none; }
   }
 </style>
 </head>
@@ -305,7 +329,7 @@
 <header>
   <div class="brand-eyebrow">من إعداد بوت</div>
   <h1 class="brand-name"><span class="accent">[اسم البوت]</span></h1>
-  <div class="subtitle">اتجاه القبلة بالبوصلة</div>
+  <div class="subtitle">جهة الكعبة المشرفة</div>
 </header>
 
 <main>
@@ -318,34 +342,40 @@
     </svg>
     <h2>وجّه جهازك نحو الكعبة المشرفة</h2>
     <p>
-      هذه الصفحة تستخدم بوصلة جهازك وموقعك الجغرافي فقط لحساب اتجاه القبلة، ولا تُخزَّن أو تُرسَل أي بيانات لأي مكان.
+      تستخدم هذه الصفحة مستشعرات جهازك لتحديد الاتجاه الحي والفعلي للقبلة بناءً على موقعك الحالي.
     </p>
-    <button class="btn" id="start-btn">تفعيل البوصلة</button>
+    <button class="btn" id="start-btn">تفعيل البوصلة الحية</button>
     <div id="status-line"></div>
   </div>
 
   <div id="compass-wrap">
     <div class="compass-dial" id="dial">
       <div class="dial-ticks" id="ticks"></div>
-      <div class="north-ring" id="north-ring">
-        <span class="dir-label N" id="label-N">ش</span>
+      
+      <div class="directions-ring">
+        <span class="dir-label N">شمال</span>
+        <span class="dir-label E">شرق</span>
+        <span class="dir-label S">جنوب</span>
+        <span class="dir-label W">غرب</span>
       </div>
 
-      <div id="needle">
-        <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-          <path d="M28 4L36 30H20L28 4Z" fill="#C9A24B"/>
-          <path d="M16 38C16 32.4772 21.3726 28 28 28C34.6274 28 40 32.4772 40 38V52H16V38Z" fill="#E2C77E"/>
-          <path d="M16 38C16 32.4772 21.3726 28 28 28C34.6274 28 40 32.4772 40 38" stroke="#1A1106" stroke-opacity="0.15" stroke-width="1"/>
-        </svg>
+      <div class="kaaba-center"></div>
+
+      <div id="needle-wrap">
+        <div id="needle">
+          <svg viewBox="0 0 34 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 0L34 35L17 28L0 35L17 0Z" fill="#C9A24B"/>
+            <path d="M17 0L17 28L0 35L17 0Z" fill="#E2C77E" opacity="0.7"/>
+          </svg>
+        </div>
       </div>
-      <div class="center-dot"></div>
     </div>
 
-    <div id="aligned-banner">📍 أنت متجه الآن نحو القبلة</div>
+    <div id="aligned-banner">📍 أنت متجه الآن نحو القبلة بشكل دقيق</div>
 
     <div id="readout">
       <div class="stat">
-        <div class="label">اتجاه القبلة</div>
+        <div class="label">زاوية القبلة</div>
         <div class="value" id="qibla-deg">--<small>°</small></div>
       </div>
       <div class="stat">
@@ -354,13 +384,13 @@
       </div>
     </div>
 
-    <button class="btn secondary" id="recalibrate-btn">إعادة الضبط</button>
+    <button class="btn secondary" id="recalibrate-btn">إعادة معايرة الحساس</button>
   </div>
 
 </main>
 
 <footer>
-  وُجّهت هذه البوصلة بحساب فلكي تقريبي لاتجاه القبلة، يُنصح بمراجعة مسجد محلي لضبط أدق.<br>
+  حساب فلكي مباشر لزاوية الانحراف الحقيقية.<br>
   <span class="bot-tag">[اسم البوت] — جزء من محراب التلاوات</span>
 </footer>
 
@@ -374,18 +404,15 @@
   const startBtn = document.getElementById('start-btn');
   const recalBtn = document.getElementById('recalibrate-btn');
   const statusLine = document.getElementById('status-line');
-  const needle = document.getElementById('needle');
-  const dial = document.getElementById('dial');
-  const northLabel = document.getElementById('north-ring');
+  const needleWrap = document.getElementById('needle-wrap');
   const qiblaDegEl = document.getElementById('qibla-deg');
   const distanceEl = document.getElementById('distance');
   const alignedBanner = document.getElementById('aligned-banner');
   const ticksContainer = document.getElementById('ticks');
 
   let qiblaBearing = null;
-  let lastHeading = 0;
 
-  // بناء علامات البوصلة (36 علامة كل 10 درجات)
+  // بناء علامات البوصلة الدائرية بشكل ديناميكي منسق
   for (let i = 0; i < 36; i++) {
     const tick = document.createElement('div');
     tick.className = 'tick' + (i % 9 === 0 ? ' major' : '');
@@ -406,8 +433,7 @@
       Math.cos(phi) * Math.tan(phiK) - Math.sin(phi) * Math.cos(lambdaK - lambda)
     );
     let bearing = toDeg(psi);
-    bearing = (bearing + 360) % 360;
-    return bearing;
+    return (bearing + 360) % 360;
   }
 
   function computeDistance(lat, lng){
@@ -424,15 +450,16 @@
     statusLine.className = type ? type : '';
   }
 
-  function updateNeedle(deviceHeading){
+  function updateCompass(deviceHeading){
     if (qiblaBearing === null) return;
-    lastHeading = deviceHeading;
-    const rotation = qiblaBearing - deviceHeading;
-    needle.style.transform = `rotate(${rotation}deg)`;
-    northLabel.style.transform = `rotate(${-deviceHeading}deg)`;
 
-    const diff = Math.abs(((rotation % 360) + 540) % 360 - 180);
-    if (diff < 6) {
+    // حركة السهم فقط بالنسبة للجهاز ليتجه للقبلة مباشرة دون تدوير الإطار بالكامل
+    const targetRotation = qiblaBearing - deviceHeading;
+    needleWrap.style.transform = `rotate(${targetRotation}deg)`;
+
+    // إظهار بانر التوجيه عند الاقتراب من الزاوية الصحيحة بمدى 5 درجات
+    const diff = Math.abs(((targetRotation % 360) + 540) % 360 - 180);
+    if (diff < 5) {
       alignedBanner.style.display = 'block';
     } else {
       alignedBanner.style.display = 'none';
@@ -440,15 +467,16 @@
   }
 
   function handleOrientation(e){
-    let heading;
+    let heading = null;
     if (e.webkitCompassHeading !== undefined) {
-      heading = e.webkitCompassHeading;
+      heading = e.webkitCompassHeading; // لأجهزة iOS ومتصفح سفاري
     } else if (e.alpha !== null) {
-      heading = 360 - e.alpha;
-    } else {
-      return;
+      heading = 360 - e.alpha; // لأجهزة الأندرويد ومتصفح كروم / بريف
     }
-    updateNeedle(heading);
+    
+    if (heading !== null) {
+      updateCompass(heading);
+    }
   }
 
   function startCompass(){
@@ -457,24 +485,24 @@
         if (state === 'granted') {
           window.addEventListener('deviceorientation', handleOrientation, true);
         } else {
-          setStatus('تم رفض إذن البوصلة، فعّله من إعدادات المتصفح.', 'error');
+          setStatus('تم رفض إذن الوصول للمستشعرات.', 'error');
         }
       }).catch(() => {
-        setStatus('تعذّر الوصول لحساس البوصلة في هذا المتصفح.', 'error');
+        setStatus('خطأ في طلب أذونات الحساس الفعلي.', 'error');
       });
-    } else if ('ondeviceorientationabsolute' in window) {
-      window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    } else if ('ondeviceorientation' in window) {
-      window.addEventListener('deviceorientation', handleOrientation, true);
     } else {
-      setStatus('جهازك لا يدعم حساس البوصلة، جرّب من موبايل بمتصفح يدعم ذلك.', 'error');
+      if ('ondeviceorientationabsolute' in window) {
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
     }
   }
 
   function init(){
-    setStatus('جاري تحديد موقعك...');
+    setStatus('جاري تحديد إحداثيات موقعك...');
     if (!navigator.geolocation) {
-      setStatus('المتصفح لا يدعم تحديد الموقع.', 'error');
+      setStatus('المتصفح الحالي لا يدعم نظام تحديد المواقع الجغرافية GPS.', 'error');
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -482,6 +510,7 @@
         const { latitude, longitude } = pos.coords;
         qiblaBearing = computeQibla(latitude, longitude);
         const dist = computeDistance(latitude, longitude);
+        
         qiblaDegEl.innerHTML = Math.round(qiblaBearing) + '<small>°</small>';
         distanceEl.innerHTML = dist.toLocaleString('en-US') + '<small> كم</small>';
 
@@ -491,9 +520,9 @@
         startCompass();
       },
       (err) => {
-        setStatus('تعذّر تحديد موقعك، فعّل خدمة الموقع وأعد المحاولة.', 'error');
+        setStatus('يرجى تفعيل الـ GPS في جهازك والسماح للمتصفح بالوصول للموقع لتفعيل الخدمة.', 'error');
       },
-      { enableHighAccuracy: true, timeout: 12000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
